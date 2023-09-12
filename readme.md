@@ -18,7 +18,7 @@ To further install all other dependencies, please run the following command, aft
 ## Datasets
 
 Please download and structure your datasets according to the instructions provided in the [CoOp](https://github.dev/KaiyangZhou/CoOp)
-official repository. All the 8 datasets should be present in the `data/` directory.
+official repository. All the `8` datasets should be present in the `data/` directory.
 
 ## Descriptions
 
