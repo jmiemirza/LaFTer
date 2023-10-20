@@ -32,10 +32,10 @@ def load_clip_to_cpu(cfg):
     return model
 
 
-class LaFTer(nn.Module):
+class LaFTerUFT(nn.Module):
 
     def __init__(self, model, classes, templates, ds_templates=None, device='cuda', log=None, dataset_name=None, txt_cls=None, cfg=None):
-        super(LaFTer, self).__init__()
+        super(LaFTerUFT, self).__init__()
         self.adapter_pl = None
         self.device = device
         self.cfg = cfg
@@ -219,7 +219,7 @@ class LaFTer(nn.Module):
 
 
 @TRAINER_REGISTRY.register()
-class LaFTerUFT(TrainerX):
+class LaFTer(TrainerX):
 
     def check_cfg(self, cfg):
         assert cfg.TRAINER.COOP.PREC in ["fp16", "fp32", "amp"]
@@ -233,7 +233,7 @@ class LaFTerUFT(TrainerX):
         if cfg.TRAINER.COOP.PREC == "fp32" or cfg.TRAINER.COOP.PREC == "amp":
             clip_model.float()
         print("Building ZERO-SHOT-MODEL CLIP")
-        self.model = LaFTer(model=clip_model, classes=classnames,
+        self.model = LaFTerUFT(model=clip_model, classes=classnames,
                                           templates=['a photo of a {}'], ds_templates = ds_specific_templates[cfg.DATASET.NAME], dataset_name= cfg.DATASET.NAME, txt_cls = cfg.txt_cls, cfg=cfg)
         self.register_model("adapt", self.model)
         device_count = torch.cuda.device_count()

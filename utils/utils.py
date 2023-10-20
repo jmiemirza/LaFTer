@@ -15,26 +15,104 @@ import random
 from pathlib import Path
 
 
-text_cls_epochs = {
-    'DescribableTextures': 5500,
-    'EuroSAT': 400,
-    'FGVCAircraft': 500,
-    'Food101': 400,
-    'OxfordFlowers': 600,
-    'SUN397': 2000,
-    'UCF101': 1050,
-    'ImageNetR': 5000,
-}
-
-def setup_txt_epochs(args, dataset):
-    args.txt_epochs = text_cls_epochs[dataset]
+lafter_datasets = ['DescribableTextures',  'EuroSAT', 'OxfordFlowers', 'SUN397', 'UCF101', 'ImageNetR', 'ImageNetSketch',
+                   'ImageNetA', 'CIFAR10_local', 'CIFAR100_local', 'ImageNet', 'Caltech101']
 
 
-def get_env_id():
-    return getpass.getuser()
+def setup_text_training_utils(args, model):
+    model = model.cuda()
+    model = model.float()
+    params = list()
+    mile_stones = args.mile_stones
 
+    for key, value in model.named_parameters():
+        if 'adapter' in key and 'adapter_pl' not in key:
+            value.requires_grad = True
+        else:
+            value.requires_grad = False
 
-def test_wo_prompting(teloader, model):
+    print('------------------ Learnable Parameters ------------------')
+    for key, value in model.named_parameters():
+        if value.requires_grad:
+            print("\t{}, {}, {}".format(key, value.numel(), value.shape))
+            params.append((key, value))
+    print('----------------------------------------------------------')
+
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in params
+                    if not any(nd in n for nd in no_decay)],
+         'weight_decay': 0.01},
+        {'params': [p for n, p in params
+                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
+
+    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
+
+    if args.scheduler == 'coslr':
+        scheduler = CosineLRScheduler(optimizer,
+                                      t_initial=args.epochs,
+                                      lr_min=1e-6,
+                                      warmup_lr_init=1e-4,
+                                      warmup_t=5,
+                                      cycle_limit=1,
+                                      t_in_epochs=True)
+    elif args.scheduler == 'multistep':
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, mile_stones, 0.1)
+    elif args.scheduler == 'cosine':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, float(args.epochs))
+    else:
+        raise NotImplementedError
+
+    criteria = LabelSmoothingCrossEntropy()
+    return optimizer, scheduler, criteria
+
+def setup_lafter_training_utils(args, model):
+    model = model.cuda()
+    model = model.float()
+    params = list()
+    for key, value in model.named_parameters():
+        if key == 'prompt_embeddings':
+            value.requires_grad = True
+        elif 'adapter' in key and 'adapter_pl' not in key:
+            value.requires_grad = True
+        elif 'projector' in key and not args.entropy:
+            value.requires_grad = True
+        elif 'ln' in key:
+            value.requires_grad = True
+        else:
+            value.requires_grad = False
+
+    for key, value in model.named_parameters():
+        if 'visual' in key:
+            if 'ln' in key or 'bn' in key:
+                value.requires_grad = True
+            else:
+                value.requires_grad = False
+
+    print('------------------ Learnable Parameters ------------------')
+    for key, value in model.named_parameters():
+        if value.requires_grad:
+            print("\t{}, {}, {}".format(key, value.numel(), value.shape))
+            params.append((key, value))
+    print('----------------------------------------------------------')
+
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in params
+                    if not any(nd in n for nd in no_decay)],
+         'weight_decay': 0.01},
+        {'params': [p for n, p in params
+                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
+
+    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, args.mile_stones, 0.60)
+    criteria = LabelSmoothingCrossEntropy()
+    return optimizer, scheduler, criteria
+def test_prompting(teloader, model):
     model.eval()
     batch_time = AverageMeter('Time', ':6.3f')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -47,10 +125,9 @@ def test_wo_prompting(teloader, model):
         inputs = inputs['img']
         if isinstance(inputs, list):
             inputs = inputs[0]
-
         with torch.no_grad():
             inputs, labels = inputs.cuda(), labels.cuda()
-            outputs = model.eval_clip_wo_prompt(inputs)
+            outputs = model.eval_clip(inputs)
             _, predicted = outputs.max(1)
             losses.append(criterion(outputs, labels).cpu())
             one_hot.append(predicted.eq(labels).cpu())
@@ -60,6 +137,30 @@ def test_wo_prompting(teloader, model):
         end = time.time()
     model.eval()
     return top1.avg * 100
+
+text_cls_epochs = {
+    'DescribableTextures': 400, # 5.5k for txt_cls
+    'EuroSAT': 400,
+    'FGVCAircraft': 500,
+    'Food101': 400,
+    'CIFAR10_local': 400,
+    'CIFAR100_local': 400, # 4k for txt_cls
+    'ImageNet': 500,
+    'OxfordFlowers': 600, # 600 for txt_cls
+    'SUN397': 500, # 2k for txt_cls
+    'UCF101': 400,
+    'ImageNetR': 500, # 4k for txt_cls
+    'ImageNetA': 500, # 4k for txt_cls
+    'ImageNetSketch': 500, # 4k for txt_cls
+    'Caltech101': 500, # 4k for txt_cls
+}
+
+def setup_txt_epochs(args, dataset):
+    args.txt_epochs = text_cls_epochs[dataset]
+
+
+def get_env_id():
+    return getpass.getuser()
 
 
 def linear_combination(x, y, epsilon):
@@ -181,33 +282,6 @@ def zero_shot(model, loader):
     print(f"Top-1 accuracy standard: {top1:.2f}")
 
 
-def zero_shot_c10_100_imagenet(model, loader):
-    # print('herrr')
-    # quit()
-    print('-------------- ZERO SHOT INFERENCE --------------')
-    total = 0.
-    correct_base = 0.
-    model.eval()
-    with torch.no_grad():
-        for i, inputs in enumerate(tqdm(loader)):
-            target = inputs[1]
-            images = inputs[0]
-            if isinstance(images, list):
-                images = images[0]
-            images = images.cuda()
-            target = target.cuda()
-            # predict
-            out = model(images)
-            logits_base = out
-            pred_base = torch.argmax(logits_base, dim=1)
-            for j in range(len(target)):
-                total += 1.
-                if pred_base[j] == target[j]:
-                    correct_base += 1.
-    top1 = (correct_base / total) * 100
-    print(f"Top-1 accuracy standard: {top1:.2f}")
-
-
 def test(teloader, model):
     model.eval()
     batch_time = AverageMeter('Time', ':6.3f')
@@ -223,87 +297,6 @@ def test(teloader, model):
         with torch.no_grad():
             inputs, labels = inputs.cuda(), labels.cuda()
             outputs = model.eval_clip(inputs)
-            _, predicted = outputs.max(1)
-            losses.append(criterion(outputs, labels).cpu())
-            one_hot.append(predicted.eq(labels).cpu())
-        acc1 = one_hot[-1].sum().item() / len(labels)
-        top1.update(acc1, len(labels))
-        batch_time.update(time.time() - end)
-        end = time.time()
-    model.eval()
-    return top1.avg * 100
-
-
-def test_prompting(teloader, model):
-    model.eval()
-    batch_time = AverageMeter('Time', ':6.3f')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    one_hot = []
-    losses = []
-    criterion = torch.nn.CrossEntropyLoss(reduction='mean').cuda()
-    end = time.time()
-    for i, inputs in enumerate(tqdm(teloader)):
-        labels = inputs['label']
-        inputs = inputs['img']
-        if isinstance(inputs, list):
-            inputs = inputs[0]
-
-        with torch.no_grad():
-            inputs, labels = inputs.cuda(), labels.cuda()
-            outputs = model.eval_clip(inputs)
-            _, predicted = outputs.max(1)
-            losses.append(criterion(outputs, labels).cpu())
-            one_hot.append(predicted.eq(labels).cpu())
-        acc1 = one_hot[-1].sum().item() / len(labels)
-        top1.update(acc1, len(labels))
-        batch_time.update(time.time() - end)
-        end = time.time()
-    model.eval()
-    return top1.avg * 100
-
-
-def test_prompting_c10_100_imagenet(teloader, model):
-    model.eval()
-    batch_time = AverageMeter('Time', ':6.3f')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    one_hot = []
-    losses = []
-    criterion = torch.nn.CrossEntropyLoss(reduction='mean').cuda()
-    end = time.time()
-    for i, (inputs, labels) in enumerate(tqdm(teloader)):
-        # labels = labels.cuda()
-        # inputs = inputs.cuda()
-        if isinstance(inputs, list):
-            inputs = inputs[0]
-        with torch.no_grad():
-            inputs, labels = inputs.cuda(), labels.cuda()
-            outputs = model.eval_clip(inputs)
-            _, predicted = outputs.max(1)
-            losses.append(criterion(outputs, labels).cpu())
-            one_hot.append(predicted.eq(labels).cpu())
-        acc1 = one_hot[-1].sum().item() / len(labels)
-        top1.update(acc1, len(labels))
-        batch_time.update(time.time() - end)
-        end = time.time()
-    model.eval()
-    return top1.avg * 100
-
-
-def test_prompting_text(teloader, model):
-    model.eval()
-    batch_time = AverageMeter('Time', ':6.3f')
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    one_hot = []
-    losses = []
-    criterion = torch.nn.CrossEntropyLoss(reduction='mean').cuda()
-    end = time.time()
-    for i, (inputs, labels) in enumerate(tqdm(teloader)):
-        if isinstance(inputs, list):
-            inputs = inputs[0]
-
-        with torch.no_grad():
-            inputs, labels = inputs.cuda(), labels.cuda()
-            outputs = model.forward_prompt_inf(inputs)
             _, predicted = outputs.max(1)
             losses.append(criterion(outputs, labels).cpu())
             one_hot.append(predicted.eq(labels).cpu())
@@ -389,159 +382,6 @@ class ConstantWarmupScheduler(_BaseWarmupScheduler):
         if self.last_epoch >= self.warmup_epoch:
             return self.successor.get_last_lr()
         return [self.cons_lr for _ in self.base_lrs]
-
-
-def setup_prompt_training_utils(args, model):
-    model = model.cuda()
-    model = model.float()
-    params = list()
-    print('Mile Stones: ', args.mile_stones)
-
-    # mile_stones = args.mile_stones = None
-    # mile_stones = np.arange(5, args.epochs, 5)
-    for key, value in model.named_parameters():
-        if key == 'prompt_embeddings':
-            value.requires_grad = True
-        elif 'adapter' in key:
-            value.requires_grad = True
-        elif 'projector' in key and not args.entropy:
-            value.requires_grad = True
-        elif 'ln' in key:
-            value.requires_grad = True
-        else:
-            value.requires_grad = False
-
-    for key, value in model.named_parameters():
-        if 'visual' in key:
-            if 'ln' in key or 'bn' in key:
-                value.requires_grad = True
-            else:
-                value.requires_grad = False
-
-    if args.deep_prompt:
-        for key, value in model.named_parameters():
-            if key == 'deep_prompt_embeddings':
-                value.requires_grad = True
-
-    print('------------------ Learnable Parameters ------------------')
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            print("\t{}, {}, {}".format(key, value.numel(), value.shape))
-            params.append((key, value))
-    print('----------------------------------------------------------')
-
-    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in params
-                    if not any(nd in n for nd in no_decay)],
-         'weight_decay': 0.01},
-        {'params': [p for n, p in params
-                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, args.mile_stones, 0.60)
-    criteria = LabelSmoothingCrossEntropy()
-    return optimizer, scheduler, criteria
-
-
-def setup_prompt_training_utils_sanity(args, model, model_pl, log):
-    model = model.cuda()
-    model = model.float()
-    params = list()
-    mile_stones = args.mile_stones
-
-    for k, v in model_pl.named_parameters():  # for sanity FREEZE the pseudo-label model
-        v.requires_grad = False
-
-    for key, value in model.named_parameters():
-        if key == 'prompt_embeddings':
-            value.requires_grad = True
-        elif 'adapter' in key and not args.entropy:
-            value.requires_grad = True
-        elif 'ln' in key:
-            value.requires_grad = True
-        else:
-            value.requires_grad = False
-    log.info('------------------ Learnable Parameters ------------------')
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            log.info("\t{}, {}, {}".format(key, value.numel(), value.shape))
-            params.append((key, value))
-    log.info('----------------------------------------------------------')
-
-    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in params
-                    if not any(nd in n for nd in no_decay)],
-         'weight_decay': 0.01},
-        {'params': [p for n, p in params
-                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
-
-    if args.scheduler == 'coslr':
-        scheduler = CosineLRScheduler(optimizer,
-                                      t_initial=args.epochs,
-                                      lr_min=1e-6,
-                                      warmup_lr_init=1e-4,
-                                      warmup_t=5,
-                                      cycle_limit=1,
-                                      t_in_epochs=True)
-    else:
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, mile_stones, 0.1)
-
-    criteria = LabelSmoothingCrossEntropy()
-    return optimizer, scheduler, criteria
-
-
-def setup_prompt_training_utils_text(args, model, log):
-    model = model.cuda()
-    model = model.float()
-    params = list()
-    mile_stones = args.mile_stones
-    name_to_update = "prompt_learner"
-
-    for name, param in model.named_parameters():
-        if name_to_update not in name:
-            # Make sure that VPT prompts are updated
-            if "VPT" in name:
-                param.requires_grad_(True)
-            elif 'adapter' in name:
-                param.requires_grad = True
-            else:
-                param.requires_grad_(False)
-
-    log.info('------------------ Learnable Parameters ------------------')
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            log.info("\t{}, {}, {}".format(key, value.numel(), value.shape))
-            params.append((key, value))
-    log.info('----------------------------------------------------------')
-
-    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in params
-                    if not any(nd in n for nd in no_decay)],
-         'weight_decay': 0.01},
-        {'params': [p for n, p in params
-                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
-
-    if args.scheduler == 'coslr':
-        scheduler = CosineLRScheduler(optimizer,
-                                      t_initial=args.epochs,
-                                      lr_min=1e-6,
-                                      warmup_lr_init=1e-4,
-                                      warmup_t=5,
-                                      cycle_limit=1,
-                                      t_in_epochs=True)
-    else:
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, mile_stones, 0.1)
-
-    criteria = LabelSmoothingCrossEntropy()
-    return optimizer, scheduler, criteria
 
 
 def get_root_logger(log_file=None, log_level=logging.INFO, name='main'):
