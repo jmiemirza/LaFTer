@@ -5,7 +5,6 @@ from dassl.utils import setup_logger, set_random_seed, collect_env_info
 from dassl.config import get_cfg_default
 from dassl.engine import build_trainer
 from utils.utils import *
-import trainers.text_cls as models
 # custom
 import datasets.oxford_flowers
 import datasets.fgvc_aircraft
@@ -15,7 +14,12 @@ import datasets.food101
 import datasets.sun397
 import datasets.ucf101
 import datasets.imagenet_r
-import trainers.text_cls
+import datasets.imagenet
+import datasets.imagenet_s
+import datasets.imagenet_a
+import datasets.caltech101
+import datasets.cifar
+import trainers.LaFTer as lafter_uft
 from utils.utils import *
 import os
 
@@ -190,80 +194,70 @@ def test(args, teloader, model):
         return top1_pl.avg * 100
 
 
-def setup_prompt_training_utils(args, model):
-    model = model.cuda()
-    model = model.float()
-    params = list()
-    mile_stones = args.mile_stones
-
-    for key, value in model.named_parameters():
-        if 'text_adapter' in key and 'text_adapter_1' not in key:
-            value.requires_grad = True
-        else:
-            value.requires_grad = False
-
-    print('------------------ Learnable Parameters ------------------')
-    for key, value in model.named_parameters():
-        if value.requires_grad:
-            print("\t{}, {}, {}".format(key, value.numel(), value.shape))
-            params.append((key, value))
-    print('----------------------------------------------------------')
-
-    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in params
-                    if not any(nd in n for nd in no_decay)],
-         'weight_decay': 0.01},
-        {'params': [p for n, p in params
-                    if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-
-    optimizer = optim.AdamW(optimizer_grouped_parameters, lr=args.lr, betas=(0.9, 0.999))
-
-    if args.scheduler == 'coslr':
-        scheduler = CosineLRScheduler(optimizer,
-                                      t_initial=args.epochs,
-                                      lr_min=1e-6,
-                                      warmup_lr_init=1e-4,
-                                      warmup_t=5,
-                                      cycle_limit=1,
-                                      t_in_epochs=True)
-    elif args.scheduler == 'multistep':
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, mile_stones, 0.1)
-    elif args.scheduler == 'cosine':
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, float(args.epochs))
-    else:
-        raise NotImplementedError
-
-    criteria = LabelSmoothingCrossEntropy()
-    return optimizer, scheduler, criteria
-
-
-def train(args, model, tr_loader, val_loader):
-    optimizer, _, _ = setup_prompt_training_utils(args, model)
+def train_txt_cls(args, model):
+    optimizer, _, _ = setup_text_training_utils(args, model)
     criteria = torch.nn.CrossEntropyLoss(label_smoothing=0.1)
     for i in tqdm(range(args.txt_epochs)):
         loss = model.train_txt_clas(criteria)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+    model.txt_cls_init()
 
-    total = 0.
-    correct_base = 0.
-    with torch.no_grad():
-        for i, inputs in enumerate(tqdm(val_loader)):
-            img = inputs["img"]
-            labels = inputs["label"]
-            text_out = model.eval_text_adapter(img.float().cuda())
-            pred_base = torch.argmax(text_out, dim=1)
-            for j in range(len(labels)):
-                total += 1.
-                if pred_base[j] == labels[j]:
-                    correct_base += 1.
-        top1 = (correct_base / total) * 100
-        print('Accuracy: ', top1)
+def train_lafter(args, model, tr_loader, val_loader):
+
+    # first train text classifier
+    train_txt_cls(args, model)
+
+    all_acc = list()
+    optimizer, scheduler, criteria = setup_lafter_training_utils(args, model)
+    batch_time = lossmeter()
+    data_time = lossmeter()
+    for epoch in range(args.epochs):
+        print(f'Epoch: {epoch}')
+        model.eval()
+        model.adapter.train()
+        end = time.time()
+
+        for i, batch in enumerate((tr_loader)):
+            data_time.update(time.time() - end)
+            batch_time.update(time.time() - end)
+
+            input = batch["img"]
+            input = torch.stack(input)  # two views from dataloader
+            input = input.to(model.device)
+
+            optimizer.zero_grad()
+
+            pl = model.forward_normal_for_pl(input[0])
+            out = model.forward_aug_with_prompts(input[1].float().cuda())
+
+            pseudo_label = F.softmax(pl, dim=-1)  # / 0.04
+            pseudo_label = pseudo_label.argmax(dim=1, keepdim=True)
+            pseudo_label = pseudo_label.flatten().cuda()
+
+            loss = criteria(out.squeeze(), pseudo_label)
+            if i % args.print_freq == 0:
+                print(
+                    "epoch [{0}/{1}][{2}/{3}]\t"
+                    "loss {losses}\t"
+                    "lr {lr:.6e}".format(
+                        epoch + 1,
+                        args.epochs,
+                        i + 1,
+                        len(tr_loader),
+                        losses=loss.item(),
+                        lr=optimizer.param_groups[0]["lr"],
+                    ))
+
+            loss.backward()
+            optimizer.step()
+        scheduler.step()
+        print(f'Evaluation: {epoch}')
+        acc = test_prompting(val_loader, model)
+        print(f'TOP-1 Accuracy: {acc}')
+        all_acc.append(acc)
+    print(f'-------------------------------- Best Accuracy: {max(all_acc)} --------------------------------')
 
 def main(args):
     cfg = setup_cfg(args)
@@ -284,13 +278,13 @@ def main(args):
     trainer = build_trainer(cfg)
     model = trainer.model
     model.args = args
-    train_loader = trainer.train_loader_x
     test_loader = trainer.test_loader
+    train_loader = trainer.train_loader_x
 
     if args.zero_shot:
         zero_shot(model, test_loader)
     else:
-        train(args, model, train_loader, test_loader)
+        train_lafter(args, model,train_loader, test_loader)
 
 
 if __name__ == "__main__":
@@ -350,34 +344,25 @@ if __name__ == "__main__":
         help="modify config options using the command-line",
     )
     parser.add_argument('--exp-name', type=str, required=False)
-    parser.add_argument('--dataset', type=str, default='cifar10', help="choices are ['imagenet']")
-    parser.add_argument('--dataroot', default='/media/mirza/Data/Downloads/test-time-training/')
-    parser.add_argument('--gpt_captions_path', default='./data/gpt_prompts_cifar.json')
     parser.add_argument('--scheduler', default='cosine')
     parser.add_argument('--scheduler-epochs', type=int, default=15)
     parser.add_argument('--scheduler-gamma', type=float, default=0.3)
     parser.add_argument('--weight-decay', type=float, default=0.0001)
     parser.add_argument('--acc-batches', type=int, default=1)
-    parser.add_argument('--n_views', type=int, default=1)
     parser.add_argument('--arch', type=str, default='ViT-B/32', required=False)
-    parser.add_argument('--inet-pretrain', type=bool, default=False)
-    parser.add_argument('--ensemble', action='store_true')
-    parser.add_argument('--deep_prompt', action='store_true')
     parser.add_argument('--gpt_prompts', action='store_true')
     parser.add_argument('--text_prompts', action='store_true')
     parser.add_argument('--zero_shot', action='store_true')
-    parser.add_argument('--entropy', action='store_true')
-    parser.add_argument('--text_aug', action='store_true')
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--txt_cls', type=str, default='17')
+    parser.add_argument('--txt_cls', type=str, default='tap', required=True, choices=['cls_only',
+                                                                                      'templates_only', 'lafter', 'zero_shot'])
     parser.add_argument('--batch_size', type=int, default=50)
     parser.add_argument('--workers', type=int, default=4)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--txt_epochs', type=int, default=1000)
     parser.add_argument('--logfolder', default='logs', type=str)
-
     args = parser.parse_args()
     args.mile_stones = None
-    setup_log_folder(args)
     main(args)
+
