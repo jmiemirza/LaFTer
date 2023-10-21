@@ -15,7 +15,7 @@ for all the 12 datasets used in our paper.
 ## Installation
 
 Our code is built upon the official codebase of the [CoOp](https://github.dev/KaiyangZhou/CoOp) paper and has been 
-tested in an environment having `python 3.8.8` and `pytorch 13.1.1` compiled with `CUDA 11.1`. 
+tested in an environment with `python 3.8.8` and `pytorch 13.1.1` compiled with `CUDA 11.1`. 
 
 As a first step, install `dassl` library (under `LaFTer/`) in your environment by following the instructions [here](https://github.com/KaiyangZhou/Dassl.pytorch#installation).
 

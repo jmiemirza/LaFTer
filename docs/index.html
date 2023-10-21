@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
+  <!-- Replace the content tag with appropriate information -->
+  <meta name="description" content="DESCRIPTION META TAG">
+  <meta property="og:title" content="SOCIAL MEDIA TITLE TAG"/>
+  <meta property="og:description" content="SOCIAL MEDIA DESCRIPTION TAG TAG"/>
+  <meta property="og:url" content="URL OF THE WEBSITE"/>
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X630-->
+  <meta property="og:image" content="static/image/your_banner_image.png" />
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+
+
+  <meta name="twitter:title" content="TWITTER BANNER TITLE META TAG">
+  <meta name="twitter:description" content="TWITTER BANNER DESCRIPTION META TAG">
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
+  <meta name="twitter:image" content="static/images/your_twitter_banner_image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Keywords for your paper to be indexed by-->
+  <meta name="keywords" content="KEYWORDS SHOULD BE PLACED HERE">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+  <title>LaFTer</title>
+  <link rel="icon" type="image/x-icon" href="static/images/car.png">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+</head>
+<body>
+
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">LaFTer: Label-Free Tuning of Zero-shot Classifier using Language and Unlabeled Image Collections</h1>
+            <div class="is-size-5 publication-authors">
+              <!-- Paper authors -->
+              <span class="author-block">
+                <a href="https://jmiemirza.github.io/" target="_blank">M. Jehanzeb Mirza</a><sup>1</sup>,</span>
+                <span class="author-block">
+                  <a href="https://mitibmwatsonailab.mit.edu/people/leonid-karlinsky/" target="_blank">Leonid Karlinsky</a><sup>2</sup>,</span>
+                  <span class="author-block">
+                    <a href="https://scholar.google.com/citations?user=JJRr8c8AAAAJ&hl=en" target="_blank">Wei Lin</a><sup>1</sup>,
+                  </span>
+              <span class="author-block">
+                    <a href="https://scholar.google.com/citations?user=oDDqnQ4AAAAJ&hl=en" target="_blank">Mateusz Kozinski</a><sup>1</sup>,
+                  </span>
+              <span class="author-block">
+                    <a href="https://scholar.google.com/citations?user=iWPrl3wAAAAJ&hl=en" target="_blank">Horst Possegger</a><sup>1</sup>,
+                  </span>
+                  <br>
+              <span class="author-block">
+                <a href="https://www.rogerioferis.org/" target="_blank">Rogerio Feris</a><sup>2</sup>,</span>
+                <span class="author-block">
+              <span class="author-block">
+                    <a href="https://scholar.google.com/citations?user=_pq05Q4AAAAJ&hl=en" target="_blank">Horst Bischof</a><sup>1</sup>
+                  </span>
+                  </div>
+
+                  <div class="is-size-5 publication-authors">
+                    <span class="author-block"><sup>1</sup>Institute for Computer Graphics and Vision, TU Graz, Austria.<br><sup>2</sup>MIT-IBM Watson AI Lab, USA.
+                        <br>NeurIPS 2023</span>
+                  </div>
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+                         <!-- Arxiv PDF link -->
+                      <span class="link-block">
+                        <a href="https://arxiv.org/pdf/2305.18287.pdf" target="_blank"
+                        class="external-link button is-normal is-rounded is-dark">
+                        <span class="icon">
+                          <i class="fas fa-file-pdf"></i>
+                        </span>
+                        <span>Paper</span>
+                      </a>
+                    </span>
+
+<!--                    &lt;!&ndash; Supplementary PDF link &ndash;&gt;-->
+<!--                    <span class="link-block">-->
+<!--                      <a href="static/pdfs/supplementary_material.pdf" target="_blank"-->
+<!--                      class="external-link button is-normal is-rounded is-dark">-->
+<!--                      <span class="icon">-->
+<!--                        <i class="fas fa-file-pdf"></i>-->
+<!--                      </span>-->
+<!--                      <span>Supplementary</span>-->
+<!--                    </a>-->
+<!--                  </span>-->
+
+                  <!-- Github link -->
+                  <span class="link-block">
+                    <a href="https://github.com/jmiemirza/LaFTer" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <!-- ArXiv abstract Link -->
+<!--                <span class="link-block">-->
+<!--                  <a href="https://arxiv.org/abs/<ARXIV PAPER ID>" target="_blank"-->
+<!--                  class="external-link button is-normal is-rounded is-dark">-->
+<!--                  <span class="icon">-->
+<!--                    <i class="ai ai-arxiv"></i>-->
+<!--                  </span>-->
+<!--                  <span>Abstract</span>-->
+<!--                </a>-->
+<!--              </span>-->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="static/images/teaser_v2.jpg" alt="Image Description" height="100%">
+      <h2 class="subtitle has-text-justified is-size-6">
+        LaFTer proposes to first train a classifier on a natural language text dataset mined in a
+controlled manner from a set of target classes by generating descriptions for each class label using
+an LLM and mixing them with handcrafted templates. The training objective is to classify each
+description to the correct (source) class name (top-left). In the second stage, LaFTer employs the text-
+only classifier to generate pseudo-labels on the unlabeled data to further finetune the vision encoder
+in a parameter-efficient manner (bottom-left). Finally, the finetuned visual encoder and text classifier
+is used for eventual classification (bottom-middle). Combining our text-only pre-trained classifier
+together with the proposed pseudo-labeling pipeline lets us consistently improve the previous SOTA
+results for label-free finetuning, UPL (right).
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Recently, large-scale pre-trained Vision and Language (VL) models have set a new
+state-of-the-art (SOTA) in zero-shot visual classification enabling open-vocabulary
+recognition of potentially unlimited set of categories defined as simple language
+prompts. However, despite these great advances, the performance of these zeroshot classifiers still falls short of the results of dedicated (closed category set)
+classifiers trained with supervised fine-tuning. In this paper we show, for the
+first time, how to reduce this gap without any labels and without any paired VL
+data, using an unlabeled image collection and a set of texts auto-generated using a
+Large Language Model (LLM) describing the categories of interest and effectively
+substituting labeled visual instances of those categories. Using our label-free
+approach, we are able to attain significant performance improvements over the
+zero-shot performance of the base VL model and other contemporary methods and
+baselines on a wide variety of datasets, demonstrating absolute improvement of
+up to 11.7% (3.8% on average) in the label-free setting. Moreover, despite our
+approach being label-free, we observe 1.3% average gains over leading few-shot
+prompting baselines that do use 5-shot supervision.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+
+<!-- Image carousel
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+                  <h2 class="title is-3">Method and Results</h2>
+    <div class="level-set has-text-justified">
+                <p>
+                    Given a pre-trained model and statistics of the clean activations from the training data, our ActMAD aligns the
+activation responses from the shifted test data to the clean activations at test-time. We model the activation distributions in terms of the means
+and variances of each activation, such that the statistics have the same shape as the feature maps. The statistics of the training activations are
+pre-computed on the training set, or computed on unlabelled data without distribution shift.
+                </p>
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+         <img src="static/images/method.jpg" alt="MY ALT TEXT" style="width:85%;"/>
+
+        <h2 class="subtitle has-text-centered">
+          Schematic of ActMAD.
+        </h2>
+      </div>
+      <div class="item">
+        <img src="static/images/teaser.jpg" alt="MY ALT TEXT"  style="width:85%;"/>
+        <h2 class="subtitle has-text-centered">
+          Continuous online adaptation for ActMAD in changing weather conditions.
+        </h2> -->
+
+        <section class="hero is-small">
+          <div class="container is-max-desktop">
+            <div class="hero-body">
+                                  <h2 class="title is-3">Method</h2>
+        
+              <img src="static/images/main_lafter.jpg" alt="Image Description" height="20%">
+              <h2 class="subtitle has-text-justified is-size-6">
+                (Top) Given a set of class labels, we generate a data set of
+                short texts by prompting a Large Language Model (LLM) multiple times with each class name. We
+                compute embeddings of these texts using CLIP text encoder. This lets us train a neural network, the
+                Text Classifier, to infer the class used to prompt the LLM from the embedding of the text it generated.
+                Even though the Text Classifier has been trained exclusively on text, it performs well in classifying
+                image embeddings generated by CLIP vision encoder. (Bottom) We further take advantage of the Text
+                Classifier by leveraging it in a pseudo-labeling setup to finetune the VL model.
+              </h2>
+            </div>
+          </div>
+        </section>
+<section class="hero is-small">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+                          <h2 class="title is-3">Main Results</h2>
+
+      <img src="static/images/lafter_main_results.jpeg" alt="Image Description" height="20%">
+      <h2 class="subtitle has-text-justified is-size-6">
+        Top-1 Classification Accuracy (%) while using the CLIP pre-trained ViT-B/32 backbone
+for 12 image classification benchmarks. LaFTer represents results obtained by first pre-training
+the visual classifier on text-only data and then performing unsupervised finetuning on the unlabeled
+image data. Highest accuracy is shown in bold, while second best is underlined.
+      </h2>
+    </div>
+  </div>
+</section>
+<!-- Image carousel -->
+<!-- <section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+                  <h2 class="title is-3">Results</h2>
+    <div class="level-set has-text-justified">
+                <p>
+                    Given a pre-trained model and statistics of the clean activations from the training data, our ActMAD aligns the
+activation responses from the shifted test data to the clean activations at test-time. We model the activation distributions in terms of the means
+and variances of each activation, such that the statistics have the same shape as the feature maps. The statistics of the training activations are
+pre-computed on the training set, or computed on unlabelled data without distribution shift.
+                </p>
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+         <img src="static/images/method.jpg" alt="MY ALT TEXT" style="width:85%;"/>
+
+        <h2 class="subtitle has-text-centered">
+          Schematic of ActMAD.
+        </h2>
+      </div>
+      <div class="item">
+        <img src="static/images/teaser.jpg" alt="MY ALT TEXT"  style="width:85%;"/>
+        <h2 class="subtitle has-text-centered">
+          Continuous online adaptation for ActMAD in changing weather conditions.
+        </h2> -->
+
+        <!--      </div>-->
+<!--      <div class="item">-->
+<!--        &lt;!&ndash; Your image here &ndash;&gt;-->
+<!--        <img src="static/images/carousel3.jpg" alt="MY ALT TEXT"/>-->
+<!--        <h2 class="subtitle has-text-centered">-->
+<!--         Third image description.-->
+<!--       </h2>-->
+<!--     </div>-->
+<!--     <div class="item">-->
+<!--      &lt;!&ndash; Your image here &ndash;&gt;-->
+<!--      <img src="static/images/carousel4.jpg" alt="MY ALT TEXT"/>-->
+<!--      <h2 class="subtitle has-text-centered">-->
+<!--        Fourth image description.-->
+<!--      </h2>-->
+<!--    </div>-->
+  </div>
+</div>
+</div>
+<!--</section>-->
+<!-- End image carousel-->
+
+
+
+
+<!--&lt;!&ndash; Youtube video &ndash;&gt;-->
+<!--<section class="hero is-small is-light">-->
+<!--  <div class="hero-body">-->
+<!--    <div class="container">-->
+<!--      &lt;!&ndash; Paper video. &ndash;&gt;-->
+<!--      <h2 class="title is-3">Video Presentation</h2>-->
+<!--      <div class="columns is-centered has-text-centered">-->
+<!--        <div class="column is-four-fifths">-->
+<!--          -->
+<!--          <div class="publication-video">-->
+<!--            &lt;!&ndash; Youtube embed code here &ndash;&gt;-->
+<!--            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</section>-->
+<!--&lt;!&ndash; End youtube video &ndash;&gt;-->
+
+
+<!--&lt;!&ndash; Video carousel &ndash;&gt;-->
+<!--<section class="hero is-small">-->
+<!--  <div class="hero-body">-->
+<!--    <div class="container">-->
+<!--      <h2 class="title is-3">Another Carousel</h2>-->
+<!--      <div id="results-carousel" class="carousel results-carousel">-->
+<!--        <div class="item item-video1">-->
+<!--          <video poster="" id="video1" autoplay controls muted loop height="100%">-->
+<!--            &lt;!&ndash; Your video file here &ndash;&gt;-->
+<!--            <source src="static/videos/carousel1.mp4"-->
+<!--            type="video/mp4">-->
+<!--          </video>-->
+<!--        </div>-->
+<!--        <div class="item item-video2">-->
+<!--          <video poster="" id="video2" autoplay controls muted loop height="100%">-->
+<!--            &lt;!&ndash; Your video file here &ndash;&gt;-->
+<!--            <source src="static/videos/carousel2.mp4"-->
+<!--            type="video/mp4">-->
+<!--          </video>-->
+<!--        </div>-->
+<!--        <div class="item item-video3">-->
+<!--          <video poster="" id="video3" autoplay controls muted loop height="100%">\-->
+<!--            &lt;!&ndash; Your video file here &ndash;&gt;-->
+<!--            <source src="static/videos/carousel3.mp4"-->
+<!--            type="video/mp4">-->
+<!--          </video>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</section>-->
+<!--&lt;!&ndash; End video carousel &ndash;&gt;-->
+
+
+
+
+
+
+<!-- Paper poster -->
+<!--<section class="hero is-small is-light">-->
+<!--  <div class="hero-body">-->
+<!--    <div class="container">-->
+<!--      <h2 class="title">Poster</h2>-->
+
+<!--      <iframe  src="static/pdfs/sample.pdf" width="100%" height="550">-->
+<!--          </iframe>-->
+
+<!--      </div>-->
+<!--    </div>-->
+<!--  </section>-->
+<!--End paper poster -->
+
+
+<!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@InProceedings{mirza2023lafter,
+        author    = {Mirza, M. Jehanzeb and Karlinsky, Leonid and Lin, Wei and Kozinski, Mateusz and 
+                     Possegger, Horst and Feris, Rogerio and Bischof, Horst},
+        title     = {LaFTer: Label-Free Tuning of Zero-shot Classifier using Language and Unlabeled Image Collections},
+        booktitle = {Conference on Neural Information Processing Systems (NeurIPS)},
+        year      = {2023}
+    }</code></pre>
+    </div>
+</section>
+<!--End BibTex citation -->
+
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+
+          <p>
+            The website template has been shamelesslessly copied from: <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>.
+<!--            You are free to borrow the of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative-->
+<!--            Commons Attribution-ShareAlike 4.0 International License</a>.-->
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>
