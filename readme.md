@@ -21,11 +21,15 @@ As a first step, install `dassl` library (under `LaFTer/`) in your environment b
 
 To further install all other dependencies, please run the following command, after having your environment activated:
 
-```pip install -r requirements.txt```
+`pip install -r requirements.txt`
 
 ## Datasets
 
-Please download and structure your datasets according to the instructions provided in the [CoOp](https://github.dev/KaiyangZhou/CoOp)
+Under `LaFTer/` first make an empty data folder: 
+
+`mkdir data`
+
+Then download and structure your datasets according to the instructions provided in the [CoOp](https://github.dev/KaiyangZhou/CoOp)
 official repository. All the `12` datasets should be present in the `data/` directory.
 
 ## Descriptions
@@ -38,13 +42,13 @@ The code for generating these descriptions is also provided in the `descriptions
 ### LaFTer
 To run the full `LaFTer` pipeline, please run the following command:
 
-```bash scripts/laFTer.sh <dataset_name>```
+`bash scripts/laFTer.sh <dataset_name>`
 
 where `<dataset_name>` can be `dtd`, `eurosat`, etc.
 ### Zero-Shot
 Similarly, to obtain zero-shot CLIP results with the single prompt template `a photo of a {category}`. Please run: 
 
-```bash scripts/zeroshot.sh <dataset_name>```
+`bash scripts/zeroshot.sh <dataset_name>`
 
 by replacing the `<dataset_name>` with one of the 12 datasets evaluated in the paper.
 
