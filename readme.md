@@ -47,7 +47,7 @@ The code for generating these descriptions is also provided in the `descriptions
 To run the full `LaFTer` pipeline, please run the following command:
 
 ```
-bash scripts/laFTer.sh <dataset_name>
+bash scripts/LaFTer.sh <dataset_name>
 ```
 
 where `<dataset_name>` can be `dtd`, `eurosat`, etc.
